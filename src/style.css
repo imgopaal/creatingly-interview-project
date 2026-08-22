@@ -6,15 +6,25 @@
 html {
 	font-family: 'Roboto', sans-serif;
 	font-size: 16px;
-	line-height: 24px;
+	line-height: 32px;
+	@media screen and (max-width: 720px) {
+		font-size: 14px;
+		line-height: 28px;
+	}
 }
 
 :root {
 	--bg-section: #dcdcdc;
+	--bg-body: #f7f7f7;
+	--gray-hover: #cdcdcd;
 	--token: 0.5rem;
 	--token2: 1rem;
+	--token3: 1.5rem;
+	--token4: 2rem;
 	--border-color: gray;
 	--heading-color: rgb(38, 38, 38);
+	--red: red;
+	--green: #c7ffc9;
 }
 
 header {
@@ -28,22 +38,28 @@ h2 {
 }
 main {
 	display: flex;
+	flex-direction: column;
 	width: 100%;
 	justify-content: center;
 	max-width: 40rem;
 	margin: auto;
 
-	.url-section {
-		background: var(--bg-section);
+	section {
 		padding: var(--token);
 		border-radius: var(--token);
-		width: 100%;
+		margin: var(--token2);
+		&:last-of-type {
+			margin-top: 0;
+		}
+	}
+
+	.url-section {
+		background: var(--bg-body);
 		display: flex;
 		gap: var(--token);
-		margin: var(--token2);
 		.url-input,
 		.fetch-button {
-			font-size: 1.4rem;
+			font-size: var(--token3);
 			padding: var(--token);
 			border-radius: var(--token);
 			border: 1px solid var(--border-color);
@@ -53,6 +69,47 @@ main {
 		}
 		.fetch-button {
 			cursor: pointer;
+			background-color: var(--green);
+		}
+	}
+	.error-msg {
+		color: var(--red);
+		font-size: var(--token2);
+		margin-bottom: var(--token2);
+		background: #ffe3e3;
+		border-radius: var(--token);
+		padding: var(--token);
+		display: none;
+	}
+	.fetch-button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	.info-section {
+		padding: 0;
+	}
+	.tags-list {
+		background: var(--bg-body);
+		padding: 1rem;
+		border-radius: 0.5rem;
+		width: 100%;
+		overflow: auto;
+		max-height: 74dvh;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		li {
+			display: flex;
+			width: 100%;
+			justify-content: space-between;
+			font-size: var(--token3);
+			background-color: var(--bg-section);
+			padding: var(--token);
+			border-radius: var(--token);
+			cursor: pointer;
+			&:hover {
+				background-color: var(--gray-hover);
+			}
 		}
 	}
 }
