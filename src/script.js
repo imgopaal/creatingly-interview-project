@@ -1,10 +1,9 @@
-// links ----
-// const cors_url = 'https://corsproxy.io/?'
-
 // elements ----
 const url_input = document.getElementById('url-input')
 const fetch_url_button = document.getElementById('fetch-url-button')
 const error_msg = document.getElementById('error-msg')
+const viewport = document.getElementById('viewport')
+const spacer = document.getElementById('spacer')
 const tags_list = document.getElementById('tags-list')
 
 //  functions ----
@@ -22,7 +21,6 @@ function setError(msg = '') {
 		error_msg.textContent = msg
 		error_msg.style.display = msg ? 'block' : 'none' // force visibility
 		url_input.setAttribute('aria-invalid', msg ? 'true' : 'false')
-		fetch_url_button.isDi
 	}
 }
 
@@ -40,46 +38,71 @@ function updateButtonState() {
 
 // function to fetch raw html
 const fetchData = async url => {
-	try {
-		const response = await fetch(url)
-		if (!response.ok) throw new Error(`status: ${response.status}`)
-		return await response.text()
-	} catch (error) {
-		console.error('Fetch failed:', error.message)
+	const response = await fetch(url)
+	if (!response.ok) throw new Error(`status: ${response.status}`)
+	return await response.text()
+}
+
+// virtual scrolling functionality
+
+// constants
+const row_height = 54 // px
+const buffer = 3
+let sorted_tags = []
+
+// set fake height to spacer
+
+const height_faker = () => {
+	spacer.style.height = `${sorted_tags.length * row_height}px`
+}
+
+// analyse data form viewport
+
+const analyse_ui = () => {
+	const no_of_rows = Math.ceil(viewport.clientHeight / row_height)
+	const start_index = Math.floor(viewport.scrollTop / row_height)
+
+	const start_index_buffer = Math.max(start_index - buffer, 0)
+	const end_index_buffer = Math.min(start_index + no_of_rows + buffer, sorted_tags.length - 1)
+	return { no_of_rows, start_index, start_index_buffer, end_index_buffer }
+}
+
+const create_row = () => {
+	const li = document.createElement('li')
+	const tag_name = document.createElement('div')
+	const tag_freq = document.createElement('div')
+	li.appendChild(tag_name)
+	li.appendChild(tag_freq)
+	return li
+}
+
+// create fixed amount of rows
+const pool_size = Math.ceil(viewport.clientHeight / row_height + buffer * 2)
+const row_pool = []
+for (let i = 0; i < pool_size; i++) {
+	const li = create_row()
+	tags_list.appendChild(li)
+	row_pool.push(li)
+}
+
+const repaint_ui = () => {
+	const { start_index_buffer, end_index_buffer } = analyse_ui()
+	for (let i = start_index_buffer; i <= end_index_buffer; i++) {
+		let pool_index = i % row_pool.length
+		let node = row_pool[pool_index]
+		let [tag_name, tag_freq] = sorted_tags[i]
+
+		node.children[0].textContent = tag_name
+		node.children[1].textContent = tag_freq
+
+		node.style.top = `${i * row_height}px`
 	}
 }
 
-// render tags in result section
-
-const render_tags = tags => {
-	// first clear previous tags list
-	clear_tags_list()
-	if (error_msg.textContent === '') {
-		const sorted_tags = Object.entries(tags).sort(([, countA], [, countB]) => countB - countA)
-		for (let i = 0; i < sorted_tags.length; i++) {
-			const tag = sorted_tags[i]
-			// list item
-			const new_list_item = document.createElement('li')
-			// tag name section
-			const tag_name = document.createElement('div')
-			// tag numbers section
-			const number_of_tags = document.createElement('div')
-
-			tag_name.textContent = tag[0]
-			number_of_tags.textContent = tag[1]
-
-			new_list_item.appendChild(tag_name)
-			new_list_item.appendChild(number_of_tags)
-
-			tags_list.appendChild(new_list_item)
-		}
-	}
-}
-
-// empty tags list
+// reset list
 
 const clear_tags_list = () => {
-	tags_list.innerHTML = ''
+	viewport.scrollTop = 0
 }
 
 async function extract_tags() {
@@ -118,10 +141,12 @@ async function extract_tags() {
 				tags_map[tag] = 1
 			}
 		}
-		render_tags(tags_map)
+		sorted_tags = Object.entries(tags_map).sort(([, countA], [, countB]) => countB - countA)
+		height_faker()
+		repaint_ui()
 	} catch (err) {
 		console.log(err)
-		setError(err.message)
+		setError(err.message === 'Failed to fetch' ? 'Could not reach that URL — check it and try again.' : err.message)
 	} finally {
 		setLoading(false)
 	}
@@ -134,6 +159,7 @@ url_input.addEventListener('input', () => {
 })
 
 fetch_url_button?.addEventListener('click', extract_tags)
+viewport.addEventListener('scroll', repaint_ui)
 
 // start
 updateButtonState()
