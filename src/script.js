@@ -5,6 +5,8 @@ const error_msg = document.getElementById('error-msg')
 const viewport = document.getElementById('viewport')
 const spacer = document.getElementById('spacer')
 const tags_list = document.getElementById('tags-list')
+const filter_input = document.getElementById('filter-input')
+const filter_input_wrapper = document.getElementById('filter-input-wrapper')
 
 //  functions ----
 const url_validator = string => {
@@ -50,10 +52,18 @@ const row_height = 54 // px
 const buffer = 3
 let sorted_tags = []
 
+// filtered tags from search input
+const filter_sorted_tags = () =>
+	sorted_tags.filter(([tag_name, tag_freq]) => {
+		return tag_name.includes(filter_input.value.trim().toLowerCase()) ? true : false
+	})
+
+let current_tags = filter_sorted_tags()
+
 // set fake height to spacer
 
 const height_faker = () => {
-	spacer.style.height = `${sorted_tags.length * row_height}px`
+	spacer.style.height = `${current_tags.length * row_height}px`
 }
 
 // analyse data form viewport
@@ -63,7 +73,7 @@ const analyse_ui = () => {
 	const start_index = Math.floor(viewport.scrollTop / row_height)
 
 	const start_index_buffer = Math.max(start_index - buffer, 0)
-	const end_index_buffer = Math.min(start_index + no_of_rows + buffer, sorted_tags.length - 1)
+	const end_index_buffer = Math.min(start_index + no_of_rows + buffer, current_tags.length - 1)
 	return { no_of_rows, start_index, start_index_buffer, end_index_buffer }
 }
 
@@ -86,11 +96,15 @@ for (let i = 0; i < pool_size; i++) {
 }
 
 const repaint_ui = () => {
+	// we have to hide all other, show only which match with the filtered ones
+	for (let i = 0; i < row_pool.length; i++) {
+		row_pool[i].style.top = '-9999px'
+	}
 	const { start_index_buffer, end_index_buffer } = analyse_ui()
 	for (let i = start_index_buffer; i <= end_index_buffer; i++) {
 		let pool_index = i % row_pool.length
 		let node = row_pool[pool_index]
-		let [tag_name, tag_freq] = sorted_tags[i]
+		let [tag_name, tag_freq] = current_tags[i]
 
 		node.children[0].textContent = tag_name
 		node.children[1].textContent = tag_freq
@@ -142,6 +156,8 @@ async function extract_tags() {
 			}
 		}
 		sorted_tags = Object.entries(tags_map).sort(([, countA], [, countB]) => countB - countA)
+		current_tags = filter_sorted_tags()
+		filter_input_wrapper.classList.toggle('visible', sorted_tags.length > 0)
 		height_faker()
 		repaint_ui()
 	} catch (err) {
@@ -160,6 +176,11 @@ url_input.addEventListener('input', () => {
 
 fetch_url_button?.addEventListener('click', extract_tags)
 viewport.addEventListener('scroll', repaint_ui)
+filter_input.addEventListener('input', e => {
+	current_tags = filter_sorted_tags()
+	height_faker()
+	repaint_ui()
+})
 
 // start
 updateButtonState()

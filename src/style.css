@@ -31,7 +31,7 @@ header {
 	padding: var(--token2) 0 0 0;
 }
 h1 {
-	padding-bottom: var(--token);
+	padding-bottom: 0.4rem;
 }
 h1,
 h2 {
@@ -60,6 +60,7 @@ main {
 		background: var(--bg-body);
 		display: flex;
 		gap: var(--token);
+		margin-bottom: 0;
 		.url-input,
 		.fetch-button {
 			font-size: var(--token3);
@@ -94,9 +95,25 @@ main {
 		padding: var(--token);
 		display: none;
 	}
+	.filter-tags-wrap {
+		width: 100%;
+		padding: var(--token);
+		display: none;
+		.filter-input {
+			width: 100%;
+			border-radius: var(--token);
+			font-size: var(--token1);
+			border: 1px solid var(--border-color);
+			padding: var(--token);
+			text-transform: lowercase;
+		}
+	}
+	.filter-tags-wrap.visible {
+		display: block;
+	}
 
 	.viewport {
-		height: calc(100vh - 175px);
+		height: calc(100vh - 210px);
 		overflow-y: auto;
 		.spacer {
 			position: relative;
